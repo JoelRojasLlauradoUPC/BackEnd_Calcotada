@@ -24,10 +24,10 @@ import java.util.List;
 @Produces(MediaType.APPLICATION_JSON)
 public class EventService {
 
-    private final EventManager eventManager;
+    private volatile EventManager eventManager;
 
     public EventService() {
-        this(new EventManager(TicketRepositoryFactory.create()));
+        this(null);
     }
 
     EventService(EventManager eventManager) {
@@ -43,7 +43,7 @@ public class EventService {
     })
     public Response verify(@PathParam("hash") String hash) {
         try {
-            Ticket ticket = eventManager.verify(hash);
+            Ticket ticket = manager().verify(hash);
             return Response.ok(ticket).build();
         } catch (SQLException ex) {
             throw dbError(ex, "Error al consultar la base de datos");
@@ -60,7 +60,7 @@ public class EventService {
     })
     public Response enter(@PathParam("hash") String hash) {
         try {
-            Ticket ticket = eventManager.enter(hash);
+            Ticket ticket = manager().enter(hash);
             return Response.ok(ticket).build();
         } catch (SQLException ex) {
             throw dbError(ex, "Error al actualizar la base de datos");
@@ -75,7 +75,7 @@ public class EventService {
     })
     public Response listAllTickets() {
         try {
-            List<Ticket> tickets = eventManager.listAllTickets();
+            List<Ticket> tickets = manager().listAllTickets();
             GenericEntity<List<Ticket>> entity = new GenericEntity<List<Ticket>>(tickets) {
             };
             return Response.ok(entity).build();
@@ -93,7 +93,7 @@ public class EventService {
     })
     public Response listTicketsByEmail(@PathParam("email") String email) {
         try {
-            List<Ticket> tickets = eventManager.listTicketsByEmail(email);
+            List<Ticket> tickets = manager().listTicketsByEmail(email);
             GenericEntity<List<Ticket>> entity = new GenericEntity<List<Ticket>>(tickets) {
             };
             return Response.ok(entity).build();
@@ -110,7 +110,7 @@ public class EventService {
     })
     public Response listUsedTickets() {
         try {
-            List<Ticket> tickets = eventManager.listUsedTickets();
+            List<Ticket> tickets = manager().listUsedTickets();
             GenericEntity<List<Ticket>> entity = new GenericEntity<List<Ticket>>(tickets) {
             };
             return Response.ok(entity).build();
@@ -127,7 +127,7 @@ public class EventService {
     })
     public Response listUnusedTickets() {
         try {
-            List<Ticket> tickets = eventManager.listUnusedTickets();
+            List<Ticket> tickets = manager().listUnusedTickets();
             GenericEntity<List<Ticket>> entity = new GenericEntity<List<Ticket>>(tickets) {
             };
             return Response.ok(entity).build();
@@ -143,7 +143,38 @@ public class EventService {
         }
         return new ApiException(500, "DB_ERROR", message + ": " + detail);
     }
+
+    private EventManager manager() {
+        EventManager current = this.eventManager;
+        if (current != null) {
+            return current;
+        }
+
+        synchronized (this) {
+            if (this.eventManager == null) {
+                try {
+                    this.eventManager = new EventManager(TicketRepositoryFactory.create());
+                } catch (RuntimeException ex) {
+                    throw new ApiException(500, "DB_CONFIG_ERROR", "Error de configuracion de MongoDB: " + rootMessage(ex));
+                }
+            }
+            return this.eventManager;
+        }
+    }
+
+    private String rootMessage(Throwable throwable) {
+        Throwable current = throwable;
+        while (current.getCause() != null) {
+            current = current.getCause();
+        }
+        String message = current.getMessage();
+        if (message == null || message.trim().isEmpty()) {
+            return current.getClass().getSimpleName();
+        }
+        return message;
+    }
 }
+
 
 
 

@@ -236,6 +236,18 @@
       gap: 10px;
     }
 
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
     .search-input {
       width: 100%;
       background: #111522;
@@ -292,8 +304,15 @@
       transition: background .2s, border-color .2s;
     }
 
+    .related-item {
+      cursor: pointer;
+      transition: background .2s, border-color .2s;
+    }
+
     .search-item:hover,
-    .search-item.selected { background: #20243a; border-color: #3b4471; }
+    .search-item.selected,
+    .related-item:hover,
+    .related-item.selected { background: #20243a; border-color: #3b4471; }
 
     .search-meta,
     .related-meta {
@@ -505,6 +524,7 @@
     <div class="search-card">
       <div class="search-title">Buscar entrada</div>
       <form id="search-form" class="search-form">
+        <label class="sr-only" for="search-input">Buscar entrada</label>
         <input
           id="search-input"
           class="search-input"
@@ -661,7 +681,7 @@
     document.getElementById('val-pct').textContent = pct + '%';
     document.getElementById('bar').style.width = pct + '%';
     document.getElementById('progress-text').textContent = usedCount + ' de ' + total + ' entradas validadas';
-    document.getElementById('progress-extra').textContent = pending + ' pendientes';
+    document.getElementById('progress-extra').textContent = pct + '% · ' + pending + ' pendientes';
   }
 
   function renderGroupStats() {
@@ -757,7 +777,7 @@
     }
 
     container.innerHTML = `<div class="related-list">${related.map(ticket => `
-      <div class="related-item">
+      <div class="related-item${ticket.hash === selected.hash ? ' selected' : ''}" data-hash="${escapeHtml(ticket.hash)}">
         <div class="related-meta">
           <div class="related-main">Local ${escapeHtml(ticket.numero_local)} · ${escapeHtml(tipoLabel(ticket.tipo))}${ticket.hash === selected.hash ? ' · seleccionada' : ''}</div>
           <div class="related-sub">Hash: ${escapeHtml(ticket.hash)} · PMR: ${ticket.pmr ? 'Sí' : 'No'} · Escaneada: ${escapeHtml(formatDateTime(ticket.consumed_at))}</div>
@@ -865,6 +885,12 @@
     selectTicket(result.dataset.hash);
   });
 
+  document.getElementById('related-content').addEventListener('click', event => {
+    const related = event.target.closest('.related-item[data-hash]');
+    if (!related) return;
+    selectTicket(related.dataset.hash);
+  });
+
   document.getElementById('search-form').addEventListener('submit', event => {
     event.preventDefault();
     state.searchQuery = document.getElementById('search-input').value;
@@ -885,4 +911,5 @@
 </script>
 </body>
 </html>
+
 

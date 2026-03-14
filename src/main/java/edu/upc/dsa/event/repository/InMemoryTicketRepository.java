@@ -3,6 +3,7 @@ package edu.upc.dsa.event.repository;
 import edu.upc.dsa.event.model.Ticket;
 
 import java.sql.SQLException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -64,6 +65,7 @@ public class InMemoryTicketRepository implements TicketRepository {
             return false;
         }
         ticket.setConsumed(true);
+        ticket.setConsumedAt(Instant.now().toString());
         return true;
     }
 
@@ -76,7 +78,8 @@ public class InMemoryTicketRepository implements TicketRepository {
                 source.isPmr(),
                 source.getHash(),
                 source.getNumeroLocal(),
-                source.isConsumed()
+                source.isConsumed(),
+                source.getConsumedAt()
         );
     }
 
@@ -98,5 +101,6 @@ public class InMemoryTicketRepository implements TicketRepository {
         };
     }
 }
+
 
 

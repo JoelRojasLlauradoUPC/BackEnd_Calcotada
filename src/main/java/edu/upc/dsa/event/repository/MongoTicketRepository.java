@@ -16,9 +16,11 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.Optional;
 
 public class MongoTicketRepository implements TicketRepository {
@@ -123,8 +125,9 @@ public class MongoTicketRepository implements TicketRepository {
         String hash = readString(doc, "hash");
         int numeroLocal = readInt(doc, "numero_local");
         boolean consumed = readBoolean(doc, "consumed");
+        String consumedAt = readDate(doc, "consumed_at");
 
-        return new Ticket(nombre, apellido, correo, tipo, pmr, hash, numeroLocal, consumed);
+        return new Ticket(nombre, apellido, correo, tipo, pmr, hash, numeroLocal, consumed, consumedAt);
     }
 
     private String readString(Document doc, String key) {
@@ -156,6 +159,19 @@ public class MongoTicketRepository implements TicketRepository {
             return false;
         }
         return Boolean.parseBoolean(String.valueOf(value));
+    }
+
+    private String readDate(Document doc, String key) {
+        Object value = doc.get(key);
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof Date) {
+            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+            format.setTimeZone(TimeZone.getTimeZone("UTC"));
+            return format.format((Date) value);
+        }
+        return String.valueOf(value);
     }
 
     private MongoCollection<Document> resolveCollection() {
@@ -193,6 +209,7 @@ public class MongoTicketRepository implements TicketRepository {
         return value.trim();
     }
 }
+
 
 
 

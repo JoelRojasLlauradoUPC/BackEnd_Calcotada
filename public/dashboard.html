@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard · Entrades QR</title>
+  <title>Dashboard · Entradas QR</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -23,75 +23,319 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
     }
 
     header h1 { font-size: 1.4rem; font-weight: 700; letter-spacing: .5px; }
     header h1 span { color: #6366f1; }
-
-    #last-update { font-size: .8rem; color: #64748b; }
+    #last-update { font-size: .82rem; color: #94a3b8; }
 
     .main {
       display: grid;
-      grid-template-columns: 1fr 360px;
+      grid-template-columns: minmax(0, 1fr) 380px;
       gap: 24px;
       padding: 28px 32px;
       flex: 1;
+      align-items: start;
     }
 
-    /* ── Tarjetas de stats ── */
-    .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; align-content: start; }
+    .left-column {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-width: 0;
+    }
 
-    .card {
+    .stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+
+    .card,
+    .progress-wrap,
+    .detail-card,
+    .search-card,
+    .group-card,
+    .panel {
       background: #1a1d27;
       border: 1px solid #2d3148;
       border-radius: 14px;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, .18);
+    }
+
+    .card {
       padding: 24px 22px;
       position: relative;
       overflow: hidden;
     }
 
-    .card .label { font-size: .78rem; text-transform: uppercase; letter-spacing: .08em; color: #64748b; margin-bottom: 10px; }
-    .card .value { font-size: 3rem; font-weight: 800; line-height: 1; }
-    .card .sub   { font-size: .82rem; color: #94a3b8; margin-top: 8px; }
+    .card .label,
+    .section-title,
+    .progress-wrap .label,
+    .search-title,
+    .group-title {
+      font-size: .78rem;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: #64748b;
+    }
 
-    .card.total   .value { color: #818cf8; }
+    .card .value { font-size: 3rem; font-weight: 800; line-height: 1; }
+    .card .sub { font-size: .82rem; color: #94a3b8; margin-top: 8px; }
+
+    .card.total .value { color: #818cf8; }
     .card.scanned .value { color: #34d399; }
     .card.pending .value { color: #fbbf24; }
-    .card.pct     .value { color: #f472b6; }
+    .card.pct .value { color: #f472b6; }
 
     .card::after {
       content: '';
       position: absolute;
-      top: -30px; right: -30px;
-      width: 100px; height: 100px;
+      top: -30px;
+      right: -30px;
+      width: 100px;
+      height: 100px;
       border-radius: 50%;
       opacity: .07;
     }
-    .card.total::after   { background: #818cf8; }
+
+    .card.total::after { background: #818cf8; }
     .card.scanned::after { background: #34d399; }
     .card.pending::after { background: #fbbf24; }
-    .card.pct::after     { background: #f472b6; }
+    .card.pct::after { background: #f472b6; }
 
-    /* ── Barra de progreso ── */
-    .progress-wrap {
-      background: #1a1d27;
-      border: 1px solid #2d3148;
-      border-radius: 14px;
+    .progress-wrap,
+    .detail-card,
+    .search-card,
+    .group-card {
       padding: 22px;
-      margin-top: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
     }
-    .progress-wrap .label { font-size: .78rem; text-transform: uppercase; letter-spacing: .08em; color: #64748b; margin-bottom: 12px; }
-    .bar-track { background: #2d3148; border-radius: 99px; height: 18px; overflow: hidden; }
-    .bar-fill  { background: linear-gradient(90deg, #6366f1, #34d399); height: 100%; border-radius: 99px; transition: width .8s ease; width: 0%; }
 
-    /* ── Panel lateral ── */
-    .panel {
-      background: #1a1d27;
+    .bar-track {
+      background: #2d3148;
+      border-radius: 99px;
+      height: 18px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      background: linear-gradient(90deg, #6366f1, #34d399);
+      height: 100%;
+      border-radius: 99px;
+      transition: width .8s ease;
+      width: 0;
+    }
+
+    .progress-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: .84rem;
+      color: #94a3b8;
+    }
+
+    .group-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .group-stat {
+      background: #111522;
       border: 1px solid #2d3148;
-      border-radius: 14px;
+      border-radius: 12px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .group-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .group-name { font-size: .82rem; font-weight: 700; }
+    .group-short {
+      font-size: .68rem;
+      font-weight: 800;
+      border-radius: 999px;
+      padding: 4px 8px;
+    }
+
+    .group-short.tipo-0 { background: rgba(220, 175, 30, .15); color: #dcaf1e; }
+    .group-short.tipo-1 { background: rgba(20, 80, 170, .18); color: #5aaaf0; }
+    .group-short.tipo-2 { background: rgba(180, 190, 200, .16); color: #b4bec8; }
+    .group-short.tipo-3 { background: rgba(90, 170, 240, .16); color: #5aaaf0; }
+    .group-short.tipo-4 { background: rgba(80, 200, 130, .16); color: #50c882; }
+
+    .group-main-number {
+      font-size: 2rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .group-breakdown {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      font-size: .76rem;
+      color: #94a3b8;
+    }
+
+    .mini-bar-track {
+      background: #20243a;
+      border-radius: 999px;
+      height: 8px;
+      overflow: hidden;
+    }
+
+    .mini-bar-fill {
+      background: linear-gradient(90deg, #6366f1, #34d399);
+      height: 100%;
+      border-radius: 999px;
+      transition: width .8s ease;
+      width: 0;
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .detail-item {
+      background: #111522;
+      border: 1px solid #2d3148;
+      border-radius: 10px;
+      padding: 12px 14px;
+    }
+
+    .detail-item.full { grid-column: 1 / -1; }
+    .detail-item .k {
+      font-size: .72rem;
+      color: #64748b;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+    .detail-item .v {
+      font-size: .96rem;
+      font-weight: 600;
+      word-break: break-word;
+    }
+
+    .search-form {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+    }
+
+    .search-input {
+      width: 100%;
+      background: #111522;
+      border: 1px solid #2d3148;
+      color: #e2e8f0;
+      border-radius: 10px;
+      padding: 12px 14px;
+      outline: none;
+      font-size: .92rem;
+    }
+
+    .search-input:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, .15);
+    }
+
+    .search-button {
+      border: 0;
+      border-radius: 10px;
+      background: linear-gradient(90deg, #6366f1, #4f46e5);
+      color: #fff;
+      font-weight: 700;
+      padding: 0 18px;
+      cursor: pointer;
+    }
+
+    .search-help {
+      font-size: .8rem;
+      color: #94a3b8;
+      line-height: 1.45;
+    }
+
+    .search-results,
+    .related-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .search-item,
+    .related-item {
+      background: #111522;
+      border: 1px solid #2d3148;
+      border-radius: 10px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .search-item {
+      cursor: pointer;
+      transition: background .2s, border-color .2s;
+    }
+
+    .search-item:hover,
+    .search-item.selected { background: #20243a; border-color: #3b4471; }
+
+    .search-meta,
+    .related-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .search-main,
+    .related-main {
+      font-weight: 600;
+      font-size: .9rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .search-sub,
+    .related-sub {
+      font-size: .78rem;
+      color: #64748b;
+      line-height: 1.45;
+    }
+
+    .ticket-state {
+      font-size: .74rem;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 999px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .ticket-state.used { background: rgba(52, 211, 153, .14); color: #34d399; }
+    .ticket-state.unused { background: rgba(251, 191, 36, .14); color: #fbbf24; }
+
+    .panel {
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      min-height: 740px;
     }
 
     .panel-header {
@@ -100,22 +344,29 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 12px;
     }
+
     .panel-header h2 { font-size: .95rem; font-weight: 700; }
+
     .badge {
       background: #6366f1;
       color: #fff;
       font-size: .7rem;
       font-weight: 700;
       padding: 2px 9px;
-      border-radius: 99px;
+      border-radius: 999px;
     }
 
-    .feed { flex: 1; overflow-y: auto; padding: 10px 12px; }
+    .feed {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 12px;
+    }
 
     .feed::-webkit-scrollbar { width: 4px; }
     .feed::-webkit-scrollbar-track { background: transparent; }
-    .feed::-webkit-scrollbar-thumb { background: #2d3148; border-radius: 99px; }
+    .feed::-webkit-scrollbar-thumb { background: #2d3148; border-radius: 999px; }
 
     .entry {
       display: flex;
@@ -123,201 +374,515 @@
       gap: 12px;
       padding: 10px 8px;
       border-radius: 10px;
-      transition: background .2s;
+      transition: background .2s, border-color .2s;
       animation: slideIn .35s ease;
+      cursor: pointer;
+      border: 1px solid transparent;
     }
+
     .entry:hover { background: #20243a; }
+    .entry.selected { background: #252b45; border-color: #3b4471; }
 
     @keyframes slideIn {
       from { opacity: 0; transform: translateX(14px); }
-      to   { opacity: 1; transform: translateX(0); }
+      to { opacity: 1; transform: translateX(0); }
     }
 
     .avatar {
-      width: 38px; height: 38px;
+      width: 38px;
+      height: 38px;
       border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 800; font-size: .95rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: .95rem;
       flex-shrink: 0;
     }
 
     .tipo-0 { background: #7a5a00; color: #dcaf1e; }
-    .tipo-1 { background: #001950; color: #1450aa; }
+    .tipo-1 { background: #001950; color: #5aaaf0; }
     .tipo-2 { background: #464e5a; color: #b4bec8; }
     .tipo-3 { background: #1450a0; color: #5aaaf0; }
     .tipo-4 { background: #14643c; color: #50c882; }
 
     .entry-info { flex: 1; min-width: 0; }
-    .entry-name  { font-size: .88rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .entry-name { font-size: .88rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .entry-local { font-size: .75rem; color: #64748b; }
-    .entry-time  { font-size: .72rem; color: #475569; text-align: right; flex-shrink: 0; }
+    .entry-time { font-size: .72rem; color: #94a3b8; text-align: right; flex-shrink: 0; }
 
-    .pmr-badge { font-size: .65rem; background: #facc15; color: #1c1c1c; font-weight: 700; padding: 1px 5px; border-radius: 4px; margin-left: 4px; }
+    .pmr-badge {
+      font-size: .65rem;
+      background: #facc15;
+      color: #1c1c1c;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 4px;
+      margin-left: 4px;
+    }
 
-    .empty { text-align: center; color: #475569; padding: 48px 0; font-size: .88rem; }
+    .empty {
+      text-align: center;
+      color: #475569;
+      padding: 28px 0;
+      font-size: .88rem;
+    }
 
-    #error-bar { display: none; background: #7f1d1d; color: #fca5a5; padding: 10px 24px; font-size: .82rem; text-align: center; }
+    #error-bar {
+      display: none;
+      background: #7f1d1d;
+      color: #fecaca;
+      padding: 10px 24px;
+      font-size: .82rem;
+      text-align: center;
+    }
 
-    @media (max-width: 768px) {
+    @media (max-width: 1280px) {
+      .group-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 980px) {
       .main { grid-template-columns: 1fr; }
-      .stats { grid-template-columns: repeat(2, 1fr); }
+      .panel { min-height: 420px; }
+      .group-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 680px) {
+      header, .main { padding-left: 18px; padding-right: 18px; }
+      .stats, .detail-grid, .group-grid { grid-template-columns: 1fr; }
+      .search-form { grid-template-columns: 1fr; }
+      .search-button { padding: 12px 14px; }
     }
   </style>
 </head>
 <body>
-
 <div id="error-bar">⚠️ No se puede conectar con la API. Reintentando…</div>
 
 <header>
-  <h1>Dashboard · <span>Entrades QR</span></h1>
+  <h1>Dashboard · <span>Entradas QR</span></h1>
   <span id="last-update">Actualizando…</span>
 </header>
 
 <div class="main">
-  <div style="display:flex; flex-direction:column; gap:16px;">
+  <div class="left-column">
     <div class="stats">
       <div class="card total">
-        <div class="label">Total entrades</div>
+        <div class="label">Total entradas</div>
         <div class="value" id="val-total">–</div>
-        <div class="sub">registrades al sistema</div>
+        <div class="sub">registradas en el sistema</div>
       </div>
       <div class="card scanned">
-        <div class="label">Escanejades</div>
+        <div class="label">Escaneadas</div>
         <div class="value" id="val-used">–</div>
-        <div class="sub">han accedit a l'event</div>
+        <div class="sub">han accedido al evento</div>
       </div>
       <div class="card pending">
-        <div class="label">Pendents</div>
+        <div class="label">Pendientes</div>
         <div class="value" id="val-unused">–</div>
-        <div class="sub">encara no han accedit</div>
+        <div class="sub">todavía sin validar</div>
       </div>
       <div class="card pct">
-        <div class="label">% accés</div>
+        <div class="label">% acceso</div>
         <div class="value" id="val-pct">–</div>
-        <div class="sub">del total validat</div>
+        <div class="sub">sobre el total de entradas</div>
       </div>
     </div>
 
     <div class="progress-wrap">
-      <div class="label">Progrés d'accés</div>
+      <div class="label">Progreso de acceso</div>
       <div class="bar-track"><div class="bar-fill" id="bar"></div></div>
+      <div class="progress-meta">
+        <span id="progress-text">0 de 0 entradas validadas</span>
+        <span id="progress-extra">0%</span>
+      </div>
+    </div>
+
+    <div class="group-card">
+      <div class="group-title">Stats detalladas por grupo</div>
+      <div class="group-grid" id="group-grid"></div>
+    </div>
+
+    <div class="search-card">
+      <div class="search-title">Buscar entrada</div>
+      <form id="search-form" class="search-form">
+        <input
+          id="search-input"
+          class="search-input"
+          type="text"
+          placeholder="Busca por nombre, apellido, correo, hash, local, tipo, PMR o estado"
+          autocomplete="off"
+        />
+        <button type="submit" class="search-button">Buscar entrada</button>
+      </form>
+      <div class="search-help">
+        El buscador trabaja en local con la información descargada en la última sincronización. Puedes escribir cualquier dato conocido y ver el detalle completo sin lanzar más peticiones al servidor.
+      </div>
+      <div id="search-results" class="empty">Escribe cualquier dato para encontrar entradas al instante</div>
+    </div>
+
+    <div class="detail-card">
+      <div class="section-title">Entrada seleccionada</div>
+      <div id="detail-content" class="empty">Pulsa una entrada escaneada o un resultado de búsqueda para ver todos sus datos</div>
+
+      <div class="section-title">Entradas del mismo correo</div>
+      <div id="related-content" class="empty">Aquí aparecerán todas las entradas asociadas al mismo correo electrónico</div>
     </div>
   </div>
 
   <div class="panel">
     <div class="panel-header">
-      <h2>Últimes escanejades</h2>
+      <h2>Últimas escaneadas</h2>
       <span class="badge" id="feed-count">0</span>
     </div>
     <div class="feed" id="feed">
-      <div class="empty">Carregant…</div>
+      <div class="empty">Cargando…</div>
     </div>
   </div>
 </div>
 
 <script>
   const API = '/api/event';
-  const REFRESH_MS = 1500;
-  const MAX_FEED = 50;
-  let refreshInFlight = false;
+  const REFRESH_MS = 1000;
+  const MAX_FEED = 60;
+  const MAX_SEARCH_RESULTS = 40;
 
-  const TIPO_LABELS = ['ORG','PROF','AUT','EST','CONV'];
+  const GROUPS = [
+    { tipo: 0, label: 'Organización', short: 'ORG' },
+    { tipo: 1, label: 'Profesores', short: 'PROF' },
+    { tipo: 2, label: 'Autoridades', short: 'AUT' },
+    { tipo: 3, label: 'Estudiantes', short: 'EST' },
+    { tipo: 4, label: 'Invitados', short: 'CONV' }
+  ];
 
-  function tipoInitial(tipo) {
-    return TIPO_LABELS[tipo] || '?';
+  const state = {
+    tickets: [],
+    refreshInFlight: false,
+    selectedHash: null,
+    searchQuery: ''
+  };
+
+  function normalize(value) {
+    return String(value == null ? '' : value)
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim();
+  }
+
+  function escapeHtml(value) {
+    return String(value == null ? '' : value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function tipoLabel(tipo) {
+    const group = GROUPS.find(item => item.tipo === Number(tipo));
+    return group ? group.label : 'Desconocido';
+  }
+
+  function tipoShort(tipo) {
+    const group = GROUPS.find(item => item.tipo === Number(tipo));
+    return group ? group.short : '—';
   }
 
   function formatTime(dateStr) {
     if (!dateStr) return '';
-    const d = new Date(dateStr);
-    if (isNaN(d)) return '';
-    return d.toLocaleTimeString('ca-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const date = new Date(dateStr);
+    if (isNaN(date)) return '';
+    return date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   }
 
-  async function fetchJSON(path) {
-    const r = await fetch(API + path);
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    return r.json();
+  function formatDateTime(dateStr) {
+    if (!dateStr) return '—';
+    const date = new Date(dateStr);
+    if (isNaN(date)) return String(dateStr);
+    return date.toLocaleString('es-ES');
   }
 
   function setError(show) {
     document.getElementById('error-bar').style.display = show ? 'block' : 'none';
   }
 
-  function renderFeed(usedTickets) {
-    const feed = document.getElementById('feed');
-    const sorted = usedTickets
-      .filter(t => t.consumed)
-      .sort((a, b) => {
-        const da = a.consumed_at ? new Date(a.consumed_at) : new Date(0);
-        const db2 = b.consumed_at ? new Date(b.consumed_at) : new Date(0);
-        return db2 - da;
-      })
-      .slice(0, MAX_FEED);
+  async function fetchTickets() {
+    const response = await fetch(API + '/tickets');
+    if (!response.ok) {
+      throw new Error('HTTP ' + response.status);
+    }
+    return response.json();
+  }
 
-    document.getElementById('feed-count').textContent = sorted.length;
+  function getUsedTickets() {
+    return state.tickets
+      .filter(ticket => ticket.consumed)
+      .sort((a, b) => compareConsumedDesc(a, b));
+  }
 
-    if (sorted.length === 0) {
-      feed.innerHTML = '<div class="empty">Cap entrada escanejada encara</div>';
+  function getUnusedTickets() {
+    return state.tickets.filter(ticket => !ticket.consumed);
+  }
+
+  function compareConsumedDesc(a, b) {
+    const timeA = a.consumed_at ? new Date(a.consumed_at).getTime() : 0;
+    const timeB = b.consumed_at ? new Date(b.consumed_at).getTime() : 0;
+    if (timeB !== timeA) return timeB - timeA;
+    return String(b.hash || '').localeCompare(String(a.hash || ''));
+  }
+
+  function ensureSelection() {
+    const selected = state.tickets.find(ticket => ticket.hash === state.selectedHash);
+    if (selected) return;
+
+    const used = getUsedTickets();
+    if (used.length > 0) {
+      state.selectedHash = used[0].hash;
       return;
     }
 
-    feed.innerHTML = sorted.map(t => {
-      const initials = ((t.nombre || '?')[0] + (t.apellido || '?')[0]).toUpperCase();
-      const pmrBadge = t.pmr ? '<span class="pmr-badge">PMR</span>' : '';
-      const time = formatTime(t.consumed_at);
+    if (state.tickets.length > 0) {
+      state.selectedHash = state.tickets[0].hash;
+      return;
+    }
+
+    state.selectedHash = null;
+  }
+
+  function renderSummary() {
+    const usedCount = getUsedTickets().length;
+    const total = state.tickets.length;
+    const pending = total - usedCount;
+    const pct = total > 0 ? Math.round((usedCount / total) * 100) : 0;
+
+    document.getElementById('val-total').textContent = total;
+    document.getElementById('val-used').textContent = usedCount;
+    document.getElementById('val-unused').textContent = pending;
+    document.getElementById('val-pct').textContent = pct + '%';
+    document.getElementById('bar').style.width = pct + '%';
+    document.getElementById('progress-text').textContent = usedCount + ' de ' + total + ' entradas validadas';
+    document.getElementById('progress-extra').textContent = pending + ' pendientes';
+  }
+
+  function renderGroupStats() {
+    const container = document.getElementById('group-grid');
+    container.innerHTML = GROUPS.map(group => {
+      const tickets = state.tickets.filter(ticket => Number(ticket.tipo) === group.tipo);
+      const used = tickets.filter(ticket => ticket.consumed).length;
+      const total = tickets.length;
+      const pending = total - used;
+      const pct = total > 0 ? Math.round((used / total) * 100) : 0;
+
       return `
-        <div class="entry">
-          <div class="avatar tipo-${t.tipo}">${initials}</div>
-          <div class="entry-info">
-            <div class="entry-name">${t.nombre} ${t.apellido}${pmrBadge}</div>
-            <div class="entry-local">Local ${t.numero_local} · ${TIPO_LABELS[t.tipo] || ''}</div>
+        <div class="group-stat">
+          <div class="group-top">
+            <div class="group-name">${group.label}</div>
+            <span class="group-short tipo-${group.tipo}">${group.short}</span>
           </div>
-          ${time ? `<div class="entry-time">${time}</div>` : ''}
+          <div class="group-main-number">${total}</div>
+          <div class="group-breakdown">
+            <div>Total: <strong>${total}</strong></div>
+            <div>Usadas: <strong>${used}</strong></div>
+            <div>Pendientes: <strong>${pending}</strong></div>
+            <div>Acceso: <strong>${pct}%</strong></div>
+          </div>
+          <div class="mini-bar-track"><div class="mini-bar-fill" style="width:${pct}%"></div></div>
         </div>`;
     }).join('');
   }
 
+  function renderFeed() {
+    const feed = document.getElementById('feed');
+    const usedTickets = getUsedTickets().slice(0, MAX_FEED);
+    document.getElementById('feed-count').textContent = usedTickets.length;
+
+    if (usedTickets.length === 0) {
+      feed.innerHTML = '<div class="empty">Todavía no se ha escaneado ninguna entrada</div>';
+      return;
+    }
+
+    feed.innerHTML = usedTickets.map(ticket => {
+      const initials = ((ticket.nombre || '?')[0] + (ticket.apellido || '?')[0]).toUpperCase();
+      const pmrBadge = ticket.pmr ? '<span class="pmr-badge">PMR</span>' : '';
+      const selectedClass = ticket.hash === state.selectedHash ? ' selected' : '';
+      return `
+        <div class="entry${selectedClass}" data-hash="${escapeHtml(ticket.hash)}">
+          <div class="avatar tipo-${ticket.tipo}">${escapeHtml(initials)}</div>
+          <div class="entry-info">
+            <div class="entry-name">${escapeHtml(ticket.nombre)} ${escapeHtml(ticket.apellido)}${pmrBadge}</div>
+            <div class="entry-local">Local ${escapeHtml(ticket.numero_local)} · ${escapeHtml(tipoLabel(ticket.tipo))}</div>
+          </div>
+          <div class="entry-time">${escapeHtml(formatTime(ticket.consumed_at))}</div>
+        </div>`;
+    }).join('');
+  }
+
+  function renderDetail() {
+    const container = document.getElementById('detail-content');
+    const ticket = state.tickets.find(item => item.hash === state.selectedHash);
+    if (!ticket) {
+      container.innerHTML = '<div class="empty">Selecciona una entrada para ver todos sus datos</div>';
+      return;
+    }
+
+    container.innerHTML = `
+      <div class="detail-grid">
+        <div class="detail-item"><div class="k">Nombre</div><div class="v">${escapeHtml(ticket.nombre)}</div></div>
+        <div class="detail-item"><div class="k">Apellido</div><div class="v">${escapeHtml(ticket.apellido)}</div></div>
+        <div class="detail-item full"><div class="k">Correo electrónico</div><div class="v">${escapeHtml(ticket.correo_electronico)}</div></div>
+        <div class="detail-item"><div class="k">Tipo</div><div class="v">${escapeHtml(tipoLabel(ticket.tipo))}</div></div>
+        <div class="detail-item"><div class="k">PMR</div><div class="v">${ticket.pmr ? 'Sí' : 'No'}</div></div>
+        <div class="detail-item"><div class="k">Número local</div><div class="v">${escapeHtml(ticket.numero_local)}</div></div>
+        <div class="detail-item"><div class="k">Estado</div><div class="v">${ticket.consumed ? 'Usada' : 'Pendiente'}</div></div>
+        <div class="detail-item"><div class="k">Escaneada el</div><div class="v">${escapeHtml(formatDateTime(ticket.consumed_at))}</div></div>
+        <div class="detail-item full"><div class="k">Hash</div><div class="v">${escapeHtml(ticket.hash)}</div></div>
+      </div>`;
+  }
+
+  function renderRelatedTickets() {
+    const container = document.getElementById('related-content');
+    const selected = state.tickets.find(item => item.hash === state.selectedHash);
+    if (!selected) {
+      container.innerHTML = '<div class="empty">Aquí aparecerán las entradas del mismo correo</div>';
+      return;
+    }
+
+    const related = state.tickets
+      .filter(ticket => ticket.correo_electronico === selected.correo_electronico)
+      .sort((a, b) => compareConsumedDesc(a, b) || Number(a.numero_local || 0) - Number(b.numero_local || 0));
+
+    if (related.length === 0) {
+      container.innerHTML = '<div class="empty">No hay entradas asociadas a ese correo</div>';
+      return;
+    }
+
+    container.innerHTML = `<div class="related-list">${related.map(ticket => `
+      <div class="related-item">
+        <div class="related-meta">
+          <div class="related-main">Local ${escapeHtml(ticket.numero_local)} · ${escapeHtml(tipoLabel(ticket.tipo))}${ticket.hash === selected.hash ? ' · seleccionada' : ''}</div>
+          <div class="related-sub">Hash: ${escapeHtml(ticket.hash)} · PMR: ${ticket.pmr ? 'Sí' : 'No'} · Escaneada: ${escapeHtml(formatDateTime(ticket.consumed_at))}</div>
+        </div>
+        <span class="ticket-state ${ticket.consumed ? 'used' : 'unused'}">${ticket.consumed ? 'Usada' : 'Pendiente'}</span>
+      </div>`).join('')}</div>`;
+  }
+
+  function buildSearchIndex(ticket) {
+    return normalize([
+      ticket.nombre,
+      ticket.apellido,
+      ticket.correo_electronico,
+      ticket.hash,
+      ticket.numero_local,
+      tipoLabel(ticket.tipo),
+      tipoShort(ticket.tipo),
+      ticket.pmr ? 'pmr movilidad reducida si' : 'no pmr',
+      ticket.consumed ? 'usada validada escaneada' : 'pendiente no usada'
+    ].join(' '));
+  }
+
+  function renderSearchResults() {
+    const container = document.getElementById('search-results');
+    const query = normalize(state.searchQuery);
+
+    if (!query) {
+      container.className = 'empty';
+      container.textContent = 'Escribe cualquier dato para encontrar entradas al instante';
+      return;
+    }
+
+    const results = state.tickets
+      .filter(ticket => buildSearchIndex(ticket).includes(query))
+      .sort((a, b) => {
+        const exactHashA = normalize(a.hash) === query ? 1 : 0;
+        const exactHashB = normalize(b.hash) === query ? 1 : 0;
+        if (exactHashB !== exactHashA) return exactHashB - exactHashA;
+        return compareConsumedDesc(a, b);
+      })
+      .slice(0, MAX_SEARCH_RESULTS);
+
+    if (results.length === 0) {
+      container.className = 'empty';
+      container.textContent = 'No se han encontrado entradas con ese criterio';
+      return;
+    }
+
+    container.className = 'search-results';
+    container.innerHTML = results.map(ticket => `
+      <div class="search-item${ticket.hash === state.selectedHash ? ' selected' : ''}" data-hash="${escapeHtml(ticket.hash)}">
+        <div class="search-meta">
+          <div class="search-main">${escapeHtml(ticket.nombre)} ${escapeHtml(ticket.apellido)} · ${escapeHtml(tipoLabel(ticket.tipo))}</div>
+          <div class="search-sub">Correo: ${escapeHtml(ticket.correo_electronico)} · Local ${escapeHtml(ticket.numero_local)} · Hash: ${escapeHtml(ticket.hash)}</div>
+        </div>
+        <span class="ticket-state ${ticket.consumed ? 'used' : 'unused'}">${ticket.consumed ? 'Usada' : 'Pendiente'}</span>
+      </div>`).join('');
+  }
+
+  function renderAll() {
+    ensureSelection();
+    renderSummary();
+    renderGroupStats();
+    renderFeed();
+    renderDetail();
+    renderRelatedTickets();
+    renderSearchResults();
+    document.getElementById('last-update').textContent = 'Actualizado ' + new Date().toLocaleTimeString('es-ES');
+  }
+
+  function selectTicket(hash) {
+    if (!hash) return;
+    state.selectedHash = hash;
+    renderFeed();
+    renderDetail();
+    renderRelatedTickets();
+    renderSearchResults();
+  }
+
   async function refresh() {
-    if (refreshInFlight) return;
-    refreshInFlight = true;
+    if (state.refreshInFlight) return;
+    state.refreshInFlight = true;
 
     try {
-      const [used, unused] = await Promise.all([
-        fetchJSON('/tickets/used'),
-        fetchJSON('/tickets/unused')
-      ]);
-
-      const usedCount   = Array.isArray(used)   ? used.length   : 0;
-      const unusedCount = Array.isArray(unused)  ? unused.length : 0;
-      const total       = usedCount + unusedCount;
-      const pct         = total > 0 ? Math.round((usedCount / total) * 100) : 0;
-
-      document.getElementById('val-total').textContent  = total;
-      document.getElementById('val-used').textContent   = usedCount;
-      document.getElementById('val-unused').textContent = unusedCount;
-      document.getElementById('val-pct').textContent    = pct + '%';
-      document.getElementById('bar').style.width        = pct + '%';
-      document.getElementById('last-update').textContent =
-        'Actualitzat ' + new Date().toLocaleTimeString('ca-ES');
-
-      renderFeed(used);
+      const tickets = await fetchTickets();
+      state.tickets = Array.isArray(tickets) ? tickets : [];
+      renderAll();
       setError(false);
-    } catch (e) {
+    } catch (error) {
       setError(true);
     } finally {
-      refreshInFlight = false;
+      state.refreshInFlight = false;
     }
   }
 
-  refresh();
-  setInterval(refresh, REFRESH_MS);
+  document.getElementById('feed').addEventListener('click', event => {
+    const entry = event.target.closest('.entry[data-hash]');
+    if (!entry) return;
+    selectTicket(entry.dataset.hash);
+  });
+
+  document.getElementById('search-results').addEventListener('click', event => {
+    const result = event.target.closest('.search-item[data-hash]');
+    if (!result) return;
+    selectTicket(result.dataset.hash);
+  });
+
+  document.getElementById('search-form').addEventListener('submit', event => {
+    event.preventDefault();
+    state.searchQuery = document.getElementById('search-input').value;
+    renderSearchResults();
+  });
+
+  document.getElementById('search-input').addEventListener('input', event => {
+    state.searchQuery = event.target.value;
+    renderSearchResults();
+  });
 
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) refresh();
   });
+
+  refresh();
+  setInterval(refresh, REFRESH_MS);
 </script>
 </body>
 </html>
-
 

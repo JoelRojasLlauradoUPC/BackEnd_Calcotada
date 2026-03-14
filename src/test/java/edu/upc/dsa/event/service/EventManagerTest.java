@@ -52,6 +52,7 @@ public class EventManagerTest {
     public void enterShouldConsumeTicket() throws Exception {
         Ticket consumed = eventManager.enter("HnmdIOCoTKusuKcCSyQCugr9v30fcQ5J");
         assertTrue(consumed.isConsumed());
+        assertTrue(consumed.getConsumedAt() != null && !consumed.getConsumedAt().isEmpty());
     }
 
     @Test(expected = ApiException.class)
@@ -86,5 +87,7 @@ public class EventManagerTest {
         assertEquals("HnmdIOCoTKusuKcCSyQCugr9v30fcQ5J", tickets.get(0).getHash());
     }
 }
+
+
 
 

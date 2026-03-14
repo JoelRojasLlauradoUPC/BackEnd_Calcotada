@@ -36,8 +36,7 @@ public class EventManager {
             throw new ApiException(409, "ALREADY_USED", "La entrada ya ha sido validada anteriormente");
         }
 
-        ticket.setConsumed(true);
-        return ticket;
+        return verify(hash);
     }
 
     public List<Ticket> listAllTickets() throws SQLException {
@@ -69,5 +68,6 @@ public class EventManager {
         }
     }
 }
+
 
 

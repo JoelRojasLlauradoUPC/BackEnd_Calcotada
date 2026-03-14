@@ -24,10 +24,17 @@ public class Ticket {
 
     private boolean consumed;
 
+    @XmlElement(name = "consumed_at")
+    private String consumedAt;
+
     public Ticket() {
     }
 
     public Ticket(String nombre, String apellido, String correoElectronico, int tipo, boolean pmr, String hash, int numeroLocal, boolean consumed) {
+        this(nombre, apellido, correoElectronico, tipo, pmr, hash, numeroLocal, consumed, null);
+    }
+
+    public Ticket(String nombre, String apellido, String correoElectronico, int tipo, boolean pmr, String hash, int numeroLocal, boolean consumed, String consumedAt) {
         this.nombre = nombre;
         this.apellido = apellido;
         this.correoElectronico = correoElectronico;
@@ -36,6 +43,7 @@ public class Ticket {
         this.hash = hash;
         this.numeroLocal = numeroLocal;
         this.consumed = consumed;
+        this.consumedAt = consumedAt;
     }
 
     public String getNombre() {
@@ -101,5 +109,15 @@ public class Ticket {
     public void setConsumed(boolean consumed) {
         this.consumed = consumed;
     }
+
+    public String getConsumedAt() {
+        return consumedAt;
+    }
+
+    public void setConsumedAt(String consumedAt) {
+        this.consumedAt = consumedAt;
+    }
 }
+
+
 

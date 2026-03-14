@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard · Entrades QR</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: #1a1d27;
+      border-bottom: 2px solid #2d3148;
+      padding: 18px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    header h1 { font-size: 1.4rem; font-weight: 700; letter-spacing: .5px; }
+    header h1 span { color: #6366f1; }
+
+    #last-update { font-size: .8rem; color: #64748b; }
+
+    .main {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 24px;
+      padding: 28px 32px;
+      flex: 1;
+    }
+
+    /* ── Tarjetas de stats ── */
+    .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; align-content: start; }
+
+    .card {
+      background: #1a1d27;
+      border: 1px solid #2d3148;
+      border-radius: 14px;
+      padding: 24px 22px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card .label { font-size: .78rem; text-transform: uppercase; letter-spacing: .08em; color: #64748b; margin-bottom: 10px; }
+    .card .value { font-size: 3rem; font-weight: 800; line-height: 1; }
+    .card .sub   { font-size: .82rem; color: #94a3b8; margin-top: 8px; }
+
+    .card.total   .value { color: #818cf8; }
+    .card.scanned .value { color: #34d399; }
+    .card.pending .value { color: #fbbf24; }
+    .card.pct     .value { color: #f472b6; }
+
+    .card::after {
+      content: '';
+      position: absolute;
+      top: -30px; right: -30px;
+      width: 100px; height: 100px;
+      border-radius: 50%;
+      opacity: .07;
+    }
+    .card.total::after   { background: #818cf8; }
+    .card.scanned::after { background: #34d399; }
+    .card.pending::after { background: #fbbf24; }
+    .card.pct::after     { background: #f472b6; }
+
+    /* ── Barra de progreso ── */
+    .progress-wrap {
+      background: #1a1d27;
+      border: 1px solid #2d3148;
+      border-radius: 14px;
+      padding: 22px;
+      margin-top: 0;
+    }
+    .progress-wrap .label { font-size: .78rem; text-transform: uppercase; letter-spacing: .08em; color: #64748b; margin-bottom: 12px; }
+    .bar-track { background: #2d3148; border-radius: 99px; height: 18px; overflow: hidden; }
+    .bar-fill  { background: linear-gradient(90deg, #6366f1, #34d399); height: 100%; border-radius: 99px; transition: width .8s ease; width: 0%; }
+
+    /* ── Panel lateral ── */
+    .panel {
+      background: #1a1d27;
+      border: 1px solid #2d3148;
+      border-radius: 14px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 18px 20px 14px;
+      border-bottom: 1px solid #2d3148;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .panel-header h2 { font-size: .95rem; font-weight: 700; }
+    .badge {
+      background: #6366f1;
+      color: #fff;
+      font-size: .7rem;
+      font-weight: 700;
+      padding: 2px 9px;
+      border-radius: 99px;
+    }
+
+    .feed { flex: 1; overflow-y: auto; padding: 10px 12px; }
+
+    .feed::-webkit-scrollbar { width: 4px; }
+    .feed::-webkit-scrollbar-track { background: transparent; }
+    .feed::-webkit-scrollbar-thumb { background: #2d3148; border-radius: 99px; }
+
+    .entry {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 8px;
+      border-radius: 10px;
+      transition: background .2s;
+      animation: slideIn .35s ease;
+    }
+    .entry:hover { background: #20243a; }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(14px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    .avatar {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: .95rem;
+      flex-shrink: 0;
+    }
+
+    .tipo-0 { background: #7a5a00; color: #dcaf1e; }
+    .tipo-1 { background: #001950; color: #1450aa; }
+    .tipo-2 { background: #464e5a; color: #b4bec8; }
+    .tipo-3 { background: #1450a0; color: #5aaaf0; }
+    .tipo-4 { background: #14643c; color: #50c882; }
+
+    .entry-info { flex: 1; min-width: 0; }
+    .entry-name  { font-size: .88rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .entry-local { font-size: .75rem; color: #64748b; }
+    .entry-time  { font-size: .72rem; color: #475569; text-align: right; flex-shrink: 0; }
+
+    .pmr-badge { font-size: .65rem; background: #facc15; color: #1c1c1c; font-weight: 700; padding: 1px 5px; border-radius: 4px; margin-left: 4px; }
+
+    .empty { text-align: center; color: #475569; padding: 48px 0; font-size: .88rem; }
+
+    #error-bar { display: none; background: #7f1d1d; color: #fca5a5; padding: 10px 24px; font-size: .82rem; text-align: center; }
+
+    @media (max-width: 768px) {
+      .main { grid-template-columns: 1fr; }
+      .stats { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<div id="error-bar">⚠️ No se puede conectar con la API. Reintentando…</div>
+
+<header>
+  <h1>Dashboard · <span>Entrades QR</span></h1>
+  <span id="last-update">Actualizando…</span>
+</header>
+
+<div class="main">
+  <div style="display:flex; flex-direction:column; gap:16px;">
+    <div class="stats">
+      <div class="card total">
+        <div class="label">Total entrades</div>
+        <div class="value" id="val-total">–</div>
+        <div class="sub">registrades al sistema</div>
+      </div>
+      <div class="card scanned">
+        <div class="label">Escanejades</div>
+        <div class="value" id="val-used">–</div>
+        <div class="sub">han accedit a l'event</div>
+      </div>
+      <div class="card pending">
+        <div class="label">Pendents</div>
+        <div class="value" id="val-unused">–</div>
+        <div class="sub">encara no han accedit</div>
+      </div>
+      <div class="card pct">
+        <div class="label">% accés</div>
+        <div class="value" id="val-pct">–</div>
+        <div class="sub">del total validat</div>
+      </div>
+    </div>
+
+    <div class="progress-wrap">
+      <div class="label">Progrés d'accés</div>
+      <div class="bar-track"><div class="bar-fill" id="bar"></div></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-header">
+      <h2>Últimes escanejades</h2>
+      <span class="badge" id="feed-count">0</span>
+    </div>
+    <div class="feed" id="feed">
+      <div class="empty">Carregant…</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API = '/api/event';
+  const REFRESH_MS = 1500;
+  const MAX_FEED = 50;
+  let refreshInFlight = false;
+
+  const TIPO_LABELS = ['ORG','PROF','AUT','EST','CONV'];
+
+  function tipoInitial(tipo) {
+    return TIPO_LABELS[tipo] || '?';
+  }
+
+  function formatTime(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    if (isNaN(d)) return '';
+    return d.toLocaleTimeString('ca-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  }
+
+  async function fetchJSON(path) {
+    const r = await fetch(API + path);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.json();
+  }
+
+  function setError(show) {
+    document.getElementById('error-bar').style.display = show ? 'block' : 'none';
+  }
+
+  function renderFeed(usedTickets) {
+    const feed = document.getElementById('feed');
+    const sorted = usedTickets
+      .filter(t => t.consumed)
+      .sort((a, b) => {
+        const da = a.consumed_at ? new Date(a.consumed_at) : new Date(0);
+        const db2 = b.consumed_at ? new Date(b.consumed_at) : new Date(0);
+        return db2 - da;
+      })
+      .slice(0, MAX_FEED);
+
+    document.getElementById('feed-count').textContent = sorted.length;
+
+    if (sorted.length === 0) {
+      feed.innerHTML = '<div class="empty">Cap entrada escanejada encara</div>';
+      return;
+    }
+
+    feed.innerHTML = sorted.map(t => {
+      const initials = ((t.nombre || '?')[0] + (t.apellido || '?')[0]).toUpperCase();
+      const pmrBadge = t.pmr ? '<span class="pmr-badge">PMR</span>' : '';
+      const time = formatTime(t.consumed_at);
+      return `
+        <div class="entry">
+          <div class="avatar tipo-${t.tipo}">${initials}</div>
+          <div class="entry-info">
+            <div class="entry-name">${t.nombre} ${t.apellido}${pmrBadge}</div>
+            <div class="entry-local">Local ${t.numero_local} · ${TIPO_LABELS[t.tipo] || ''}</div>
+          </div>
+          ${time ? `<div class="entry-time">${time}</div>` : ''}
+        </div>`;
+    }).join('');
+  }
+
+  async function refresh() {
+    if (refreshInFlight) return;
+    refreshInFlight = true;
+
+    try {
+      const [used, unused] = await Promise.all([
+        fetchJSON('/tickets/used'),
+        fetchJSON('/tickets/unused')
+      ]);
+
+      const usedCount   = Array.isArray(used)   ? used.length   : 0;
+      const unusedCount = Array.isArray(unused)  ? unused.length : 0;
+      const total       = usedCount + unusedCount;
+      const pct         = total > 0 ? Math.round((usedCount / total) * 100) : 0;
+
+      document.getElementById('val-total').textContent  = total;
+      document.getElementById('val-used').textContent   = usedCount;
+      document.getElementById('val-unused').textContent = unusedCount;
+      document.getElementById('val-pct').textContent    = pct + '%';
+      document.getElementById('bar').style.width        = pct + '%';
+      document.getElementById('last-update').textContent =
+        'Actualitzat ' + new Date().toLocaleTimeString('ca-ES');
+
+      renderFeed(used);
+      setError(false);
+    } catch (e) {
+      setError(true);
+    } finally {
+      refreshInFlight = false;
+    }
+  }
+
+  refresh();
+  setInterval(refresh, REFRESH_MS);
+
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) refresh();
+  });
+</script>
+</body>
+</html>
+
+

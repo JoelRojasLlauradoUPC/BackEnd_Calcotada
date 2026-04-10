@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DE3TAC - Graduacio 2026 - Dashboard</title>
+  <title>DE3TAC - Calçotada - Dashboard</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -542,7 +542,7 @@
 <div id="error-bar">⚠️ No es pot connectar amb l'API. Reintentant...</div>
 
 <header>
-  <h1>DE3TAC - <span>Graduacio 2026</span> - Dashboard</h1>
+  <h1>DE3TAC - <span>Calçotada</span> - Dashboard</h1>
   <div class="header-actions">
     <span id="last-update">Actualitzant...</span>
     <button id="theme-btn" class="theme-btn" type="button" aria-label="Canviar tema" title="Canviar tema">Tema clar</button>
@@ -590,7 +590,7 @@
     </div>
 
     <div class="group-card">
-      <div class="group-title">Top 5 entrepas més solicitades</div>
+      <div class="group-title">Estadistiques per tipus d'entrepà</div>
       <div class="group-grid" id="group-grid"></div>
     </div>
 
@@ -756,24 +756,24 @@
       if (ticket.consumed) entrepaCount[entrepa].used++;
     });
 
-    const entrepas = Object.entries(entrepaCount).sort((a, b) => b[1].total - a[1].total).slice(0, 5);
+    const entrepas = Object.entries(entrepaCount).sort((a, b) => a[0].localeCompare(b[0], 'ca'));
     container.innerHTML = entrepas.map(([entrepa, stats]) => {
       const pct = Math.round((stats.used / stats.total) * 100);
       return `
         <div class="group-stat">
           <div class="group-top">
-            <div class="group-name" title="${escapeHtml(entrepa)}">${escapeHtml(entrepa.substring(0, 25))}</div>
+            <div class="group-name" title="${escapeHtml(entrepa)}">${escapeHtml(entrepa)}</div>
           </div>
           <div class="group-main-number">${stats.total}</div>
           <div class="group-breakdown">
             <div>Total: <strong>${stats.total}</strong></div>
-            <div>Usades: <strong>${stats.used}</strong></div>
+            <div>Servits: <strong>${stats.used}</strong></div>
             <div>Pendents: <strong>${stats.total - stats.used}</strong></div>
-            <div>Acces: <strong>${pct}%</strong></div>
+            <div>%: <strong>${pct}%</strong></div>
           </div>
           <div class="mini-bar-track"><div class="mini-bar-fill" style="width:${pct}%"></div></div>
         </div>`;
-    }).join('') || '<div class="empty">Carregant estadistiques...</div>';
+    }).join('') || '<div class="empty">No hi ha tipus d\'entrepà disponibles</div>';
   }
 
   function renderFeed() {

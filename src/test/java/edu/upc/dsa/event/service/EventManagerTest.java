@@ -22,8 +22,7 @@ public class EventManagerTest {
                 "Leonardo",
                 "Andreoli",
                 "delegacio.eetac@upc.edu",
-                4,
-                false,
+                "Entrada General",
                 "HnmdIOCoTKusuKcCSyQCugr9v30fcQ5J",
                 2,
                 false
@@ -32,8 +31,7 @@ public class EventManagerTest {
                 "Ada",
                 "Lovelace",
                 "ada@example.com",
-                0,
-                true,
+                "Entrada VIP",
                 "USED_HASH",
                 1,
                 true

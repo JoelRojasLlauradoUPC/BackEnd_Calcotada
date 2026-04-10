@@ -32,11 +32,15 @@ public class RequestLoggingFilter implements ContainerRequestFilter, ContainerRe
         String method = requestContext.getMethod();
         String path = requestContext.getUriInfo().getRequestUri().toString();
         int status = responseContext.getStatus();
+        String message;
 
         if (elapsedMs >= 0) {
-            LOGGER.info(method + " " + path + " -> " + status + " (" + elapsedMs + " ms)");
+            message = method + " " + path + " -> " + status + " (" + elapsedMs + " ms)";
         } else {
-            LOGGER.info(method + " " + path + " -> " + status);
+            message = method + " " + path + " -> " + status;
         }
+
+        LOGGER.info(message);
+        System.out.println(message);
     }
 }

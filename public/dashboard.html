@@ -758,17 +758,18 @@
 
     const entrepas = Object.entries(entrepaCount).sort((a, b) => a[0].localeCompare(b[0], 'ca'));
     container.innerHTML = entrepas.map(([entrepa, stats]) => {
+      const pending = stats.total - stats.used;
       const pct = Math.round((stats.used / stats.total) * 100);
       return `
         <div class="group-stat">
           <div class="group-top">
             <div class="group-name" title="${escapeHtml(entrepa)}">${escapeHtml(entrepa)}</div>
           </div>
-          <div class="group-main-number">${stats.total}</div>
+          <div class="group-main-number">${pending}</div>
           <div class="group-breakdown">
             <div>Total: <strong>${stats.total}</strong></div>
             <div>Servits: <strong>${stats.used}</strong></div>
-            <div>Pendents: <strong>${stats.total - stats.used}</strong></div>
+            <div>Pendents: <strong>${pending}</strong></div>
             <div>%: <strong>${pct}%</strong></div>
           </div>
           <div class="mini-bar-track"><div class="mini-bar-fill" style="width:${pct}%"></div></div>

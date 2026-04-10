@@ -120,14 +120,13 @@ public class MongoTicketRepository implements TicketRepository {
         String nombre = readString(doc, "nombre");
         String apellido = readString(doc, "apellido");
         String correo = readString(doc, "correo_electronico");
-        int tipo = readInt(doc, "tipo");
-        boolean pmr = readBoolean(doc, "pmr");
+        String entrepa = readString(doc, "entrepa");
         String hash = readString(doc, "hash");
         int numeroLocal = readInt(doc, "numero_local");
         boolean consumed = readBoolean(doc, "consumed");
         String consumedAt = readDate(doc, "consumed_at");
 
-        return new Ticket(nombre, apellido, correo, tipo, pmr, hash, numeroLocal, consumed, consumedAt);
+        return new Ticket(nombre, apellido, correo, entrepa, hash, numeroLocal, consumed, consumedAt);
     }
 
     private String readString(Document doc, String key) {

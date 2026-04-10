@@ -13,7 +13,7 @@ import java.util.Optional;
 
 public class JdbcTicketRepository implements TicketRepository {
 
-    private static final String BASE_SELECT = "SELECT nombre, apellido, correo_electronico, tipo, pmr, hash, numero_local, consumed, consumed_at FROM event_tickets";
+    private static final String BASE_SELECT = "SELECT nombre, apellido, correo_electronico, entrepa, hash, numero_local, consumed, consumed_at FROM event_tickets";
 
     @Override
     public Optional<Ticket> findByHash(String hash) throws SQLException {
@@ -89,8 +89,7 @@ public class JdbcTicketRepository implements TicketRepository {
                 rs.getString("nombre"),
                 rs.getString("apellido"),
                 rs.getString("correo_electronico"),
-                rs.getInt("tipo"),
-                rs.getBoolean("pmr"),
+                rs.getString("entrepa"),
                 rs.getString("hash"),
                 rs.getInt("numero_local"),
                 rs.getBoolean("consumed"),

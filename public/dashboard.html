@@ -248,11 +248,7 @@
       padding: 4px 8px;
     }
 
-    .group-short.tipo-0 { background: rgba(220, 175, 30, .15); color: #dcaf1e; }
-    .group-short.tipo-1 { background: rgba(20, 80, 170, .18); color: #5aaaf0; }
-    .group-short.tipo-2 { background: rgba(180, 190, 200, .16); color: #b4bec8; }
-    .group-short.tipo-3 { background: rgba(90, 170, 240, .16); color: #5aaaf0; }
-    .group-short.tipo-4 { background: rgba(80, 200, 130, .16); color: #50c882; }
+
 
     .group-main-number {
       font-size: 2rem;
@@ -499,26 +495,14 @@
       flex-shrink: 0;
     }
 
-    .tipo-0 { background: #7a5a00; color: #dcaf1e; }
-    .tipo-1 { background: #001950; color: #5aaaf0; }
-    .tipo-2 { background: #464e5a; color: #b4bec8; }
-    .tipo-3 { background: #1450a0; color: #5aaaf0; }
-    .tipo-4 { background: #14643c; color: #50c882; }
+    .entry-avatar { background: linear-gradient(135deg, #6366f1, #4f46e5); }
 
     .entry-info { flex: 1; min-width: 0; }
     .entry-name { font-size: .88rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .entry-local { font-size: .75rem; color: var(--muted); }
     .entry-time { font-size: .72rem; color: var(--subtle); text-align: right; flex-shrink: 0; }
 
-    .pmr-badge {
-      font-size: .65rem;
-      background: #facc15;
-      color: #1c1c1c;
-      font-weight: 700;
-      padding: 1px 5px;
-      border-radius: 4px;
-      margin-left: 4px;
-    }
+
 
     .empty {
       text-align: center;
@@ -606,7 +590,7 @@
     </div>
 
     <div class="group-card">
-      <div class="group-title">Estadistiques detallades per grup</div>
+      <div class="group-title">Top 5 entrepas més solicitades</div>
       <div class="group-grid" id="group-grid"></div>
     </div>
 
@@ -618,7 +602,7 @@
           id="search-input"
           class="search-input"
           type="text"
-          placeholder="Cerca per nom, cognom, correu, hash, local, tipus, PMR o estat"
+          placeholder="Cerca per nom, cognom, correu, hash, local o estat"
           autocomplete="off"
         />
         <button type="submit" class="search-button">Cercar entrada</button>
@@ -655,13 +639,7 @@
   const MAX_FEED = 60;
   const MAX_SEARCH_RESULTS = 40;
 
-  const GROUPS = [
-    { tipo: 0, label: 'Organitzacio', short: 'ORG' },
-    { tipo: 1, label: 'Professors', short: 'PROF' },
-    { tipo: 2, label: 'Autoritats', short: 'AUT' },
-    { tipo: 3, label: 'Estudiants', short: 'EST' },
-    { tipo: 4, label: 'Convidats', short: 'CONV' }
-  ];
+
 
   const state = {
     tickets: [],
@@ -688,15 +666,7 @@
       .replace(/'/g, '&#39;');
   }
 
-  function tipoLabel(tipo) {
-    const group = GROUPS.find(item => item.tipo === Number(tipo));
-    return group ? group.label : 'Desconegut';
-  }
 
-  function tipoShort(tipo) {
-    const group = GROUPS.find(item => item.tipo === Number(tipo));
-    return group ? group.short : '—';
-  }
 
   function formatTime(dateStr) {
     if (!dateStr) return '';
@@ -776,29 +746,34 @@
 
   function renderGroupStats() {
     const container = document.getElementById('group-grid');
-    container.innerHTML = GROUPS.map(group => {
-      const tickets = state.tickets.filter(ticket => Number(ticket.tipo) === group.tipo);
-      const used = tickets.filter(ticket => ticket.consumed).length;
-      const total = tickets.length;
-      const pending = total - used;
-      const pct = total > 0 ? Math.round((used / total) * 100) : 0;
+    const entrepaCount = {};
+    state.tickets.forEach(ticket => {
+      const entrepa = ticket.entrepa || 'No especificada';
+      if (!entrepaCount[entrepa]) {
+        entrepaCount[entrepa] = { total: 0, used: 0 };
+      }
+      entrepaCount[entrepa].total++;
+      if (ticket.consumed) entrepaCount[entrepa].used++;
+    });
 
+    const entrepas = Object.entries(entrepaCount).sort((a, b) => b[1].total - a[1].total).slice(0, 5);
+    container.innerHTML = entrepas.map(([entrepa, stats]) => {
+      const pct = Math.round((stats.used / stats.total) * 100);
       return `
         <div class="group-stat">
           <div class="group-top">
-            <div class="group-name">${group.label}</div>
-            <span class="group-short tipo-${group.tipo}">${group.short}</span>
+            <div class="group-name" title="${escapeHtml(entrepa)}">${escapeHtml(entrepa.substring(0, 25))}</div>
           </div>
-          <div class="group-main-number">${total}</div>
+          <div class="group-main-number">${stats.total}</div>
           <div class="group-breakdown">
-            <div>Total: <strong>${total}</strong></div>
-            <div>Usades: <strong>${used}</strong></div>
-            <div>Pendents: <strong>${pending}</strong></div>
+            <div>Total: <strong>${stats.total}</strong></div>
+            <div>Usades: <strong>${stats.used}</strong></div>
+            <div>Pendents: <strong>${stats.total - stats.used}</strong></div>
             <div>Acces: <strong>${pct}%</strong></div>
           </div>
           <div class="mini-bar-track"><div class="mini-bar-fill" style="width:${pct}%"></div></div>
         </div>`;
-    }).join('');
+    }).join('') || '<div class="empty">Carregant estadistiques...</div>';
   }
 
   function renderFeed() {
@@ -813,14 +788,13 @@
 
     feed.innerHTML = usedTickets.map(ticket => {
       const initials = ((ticket.nombre || '?')[0] + (ticket.apellido || '?')[0]).toUpperCase();
-      const pmrBadge = ticket.pmr ? '<span class="pmr-badge">PMR</span>' : '';
       const selectedClass = ticket.hash === state.selectedHash ? ' selected' : '';
       return `
         <div class="entry${selectedClass}" data-hash="${escapeHtml(ticket.hash)}">
-          <div class="avatar tipo-${ticket.tipo}">${escapeHtml(initials)}</div>
+          <div class="avatar entry-avatar">${escapeHtml(initials)}</div>
           <div class="entry-info">
-            <div class="entry-name">${escapeHtml(ticket.nombre)} ${escapeHtml(ticket.apellido)}${pmrBadge}</div>
-            <div class="entry-local">Local ${escapeHtml(ticket.numero_local)} · ${escapeHtml(tipoLabel(ticket.tipo))}</div>
+            <div class="entry-name">${escapeHtml(ticket.nombre)} ${escapeHtml(ticket.apellido)}</div>
+            <div class="entry-local">Local ${escapeHtml(ticket.numero_local)}</div>
           </div>
           <div class="entry-time">${escapeHtml(formatTime(ticket.consumed_at))}</div>
         </div>`;
@@ -840,8 +814,7 @@
         <div class="detail-item"><div class="k">Nom</div><div class="v">${escapeHtml(ticket.nombre)}</div></div>
         <div class="detail-item"><div class="k">Cognom</div><div class="v">${escapeHtml(ticket.apellido)}</div></div>
         <div class="detail-item full"><div class="k">Correu electronic</div><div class="v">${escapeHtml(ticket.correo_electronico)}</div></div>
-        <div class="detail-item"><div class="k">Tipus</div><div class="v">${escapeHtml(tipoLabel(ticket.tipo))}</div></div>
-        <div class="detail-item"><div class="k">PMR</div><div class="v">${ticket.pmr ? 'Sí' : 'No'}</div></div>
+        <div class="detail-item full"><div class="k">Entrepa</div><div class="v">${escapeHtml(ticket.entrepa || '—')}</div></div>
         <div class="detail-item"><div class="k">Numero local</div><div class="v">${escapeHtml(ticket.numero_local)}</div></div>
         <div class="detail-item"><div class="k">Estat</div><div class="v">${ticket.consumed ? 'Usada' : 'Pendent'}</div></div>
         <div class="detail-item"><div class="k">Escanejada el</div><div class="v">${escapeHtml(formatDateTime(ticket.consumed_at))}</div></div>
@@ -869,8 +842,8 @@
     container.innerHTML = `<div class="related-list">${related.map(ticket => `
       <div class="related-item${ticket.hash === selected.hash ? ' selected' : ''}" data-hash="${escapeHtml(ticket.hash)}">
         <div class="related-meta">
-          <div class="related-main">Local ${escapeHtml(ticket.numero_local)} · ${escapeHtml(tipoLabel(ticket.tipo))}${ticket.hash === selected.hash ? ' · seleccionada' : ''}</div>
-          <div class="related-sub">Hash: ${escapeHtml(ticket.hash)} · PMR: ${ticket.pmr ? 'Sí' : 'No'} · Escanejada: ${escapeHtml(formatDateTime(ticket.consumed_at))}</div>
+          <div class="related-main">Local ${escapeHtml(ticket.numero_local)}${ticket.hash === selected.hash ? ' · seleccionada' : ''}</div>
+          <div class="related-sub">Hash: ${escapeHtml(ticket.hash)} · Entrepa: ${escapeHtml(ticket.entrepa || '—')} · Escanejada: ${escapeHtml(formatDateTime(ticket.consumed_at))}</div>
         </div>
         <span class="ticket-state ${ticket.consumed ? 'used' : 'unused'}">${ticket.consumed ? 'Usada' : 'Pendent'}</span>
       </div>`).join('')}</div>`;
@@ -881,11 +854,9 @@
       ticket.nombre,
       ticket.apellido,
       ticket.correo_electronico,
+      ticket.entrepa,
       ticket.hash,
       ticket.numero_local,
-      tipoLabel(ticket.tipo),
-      tipoShort(ticket.tipo),
-      ticket.pmr ? 'pmr movilidad reducida si' : 'no pmr',
       ticket.consumed ? 'usada validada escanejada' : 'pendent no usada'
     ].join(' '));
   }
@@ -920,8 +891,8 @@
     container.innerHTML = results.map(ticket => `
       <div class="search-item${ticket.hash === state.selectedHash ? ' selected' : ''}" data-hash="${escapeHtml(ticket.hash)}">
         <div class="search-meta">
-          <div class="search-main">${escapeHtml(ticket.nombre)} ${escapeHtml(ticket.apellido)} · ${escapeHtml(tipoLabel(ticket.tipo))}</div>
-          <div class="search-sub">Correu: ${escapeHtml(ticket.correo_electronico)} · Local ${escapeHtml(ticket.numero_local)} · Hash: ${escapeHtml(ticket.hash)}</div>
+          <div class="search-main">${escapeHtml(ticket.nombre)} ${escapeHtml(ticket.apellido)}</div>
+          <div class="search-sub">Correu: ${escapeHtml(ticket.correo_electronico)} · Local ${escapeHtml(ticket.numero_local)} · Entrepa: ${escapeHtml(ticket.entrepa || '—')}</div>
         </div>
         <span class="ticket-state ${ticket.consumed ? 'used' : 'unused'}">${ticket.consumed ? 'Usada' : 'Pendent'}</span>
       </div>`).join('');

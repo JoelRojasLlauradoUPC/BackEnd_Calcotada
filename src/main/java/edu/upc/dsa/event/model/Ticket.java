@@ -15,8 +15,7 @@ public class Ticket {
     @XmlElement(name = "correo_electronico")
     private String correoElectronico;
 
-    private int tipo;
-    private boolean pmr;
+    private String entrepa;
     private String hash;
 
     @XmlElement(name = "numero_local")
@@ -30,16 +29,15 @@ public class Ticket {
     public Ticket() {
     }
 
-    public Ticket(String nombre, String apellido, String correoElectronico, int tipo, boolean pmr, String hash, int numeroLocal, boolean consumed) {
-        this(nombre, apellido, correoElectronico, tipo, pmr, hash, numeroLocal, consumed, null);
+    public Ticket(String nombre, String apellido, String correoElectronico, String entrepa, String hash, int numeroLocal, boolean consumed) {
+        this(nombre, apellido, correoElectronico, entrepa, hash, numeroLocal, consumed, null);
     }
 
-    public Ticket(String nombre, String apellido, String correoElectronico, int tipo, boolean pmr, String hash, int numeroLocal, boolean consumed, String consumedAt) {
+    public Ticket(String nombre, String apellido, String correoElectronico, String entrepa, String hash, int numeroLocal, boolean consumed, String consumedAt) {
         this.nombre = nombre;
         this.apellido = apellido;
         this.correoElectronico = correoElectronico;
-        this.tipo = tipo;
-        this.pmr = pmr;
+        this.entrepa = entrepa;
         this.hash = hash;
         this.numeroLocal = numeroLocal;
         this.consumed = consumed;
@@ -70,20 +68,12 @@ public class Ticket {
         this.correoElectronico = correoElectronico;
     }
 
-    public int getTipo() {
-        return tipo;
+    public String getEntrepa() {
+        return entrepa;
     }
 
-    public void setTipo(int tipo) {
-        this.tipo = tipo;
-    }
-
-    public boolean isPmr() {
-        return pmr;
-    }
-
-    public void setPmr(boolean pmr) {
-        this.pmr = pmr;
+    public void setEntrepa(String entrepa) {
+        this.entrepa = entrepa;
     }
 
     public String getHash() {

@@ -45,7 +45,6 @@ public class EventManagerTest {
     public void verifyShouldReturnTicketByHash() throws Exception {
         Ticket ticket = eventManager.verify("HnmdIOCoTKusuKcCSyQCugr9v30fcQ5J");
         assertEquals("Leonardo", ticket.getNombre());
-        assertEquals(4, ticket.getTipo());
     }
 
     @Test

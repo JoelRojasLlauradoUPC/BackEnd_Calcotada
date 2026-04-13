@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DE3TAC - Calçotada - Consumir entrada</title>
-  <script src="https://unpkg.com/html5-qrcode@2.3.10/minified/html5-qrcode.min.js"></script>
+  <script src="vendor/html5-qrcode.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; }
 
@@ -529,6 +529,14 @@
         updateCameraButtons();
         setStatus('Aquest navegador no te suport per accedir a la camera.', 'warn');
         setBanner('error', 'Camera no suportada', 'Prova amb una versio actual de Chrome, Edge, Firefox o Safari.');
+        return;
+      }
+
+      if (typeof Html5Qrcode === 'undefined') {
+        state.started = false;
+        updateCameraButtons();
+        setStatus('No s\'ha carregat la llibreria de lector QR.', 'warn');
+        setBanner('error', 'Lector QR no disponible', 'No s\'ha trobat Html5Qrcode. Recarrega la pagina o revisa que existeixi vendor/html5-qrcode.min.js.');
         return;
       }
 

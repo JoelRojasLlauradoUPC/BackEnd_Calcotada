@@ -326,7 +326,7 @@
 
         <div class="scanner-box">
           <div id="reader"></div>
-          <div id="scan-status" class="status">Preparant lector de QR...</div>
+          <div id="scan-status" class="status">Prem "Activar camera" per iniciar el lector de QR.</div>
         </div>
       </section>
 
@@ -341,6 +341,7 @@
         <div id="result-grid" class="result-grid"></div>
 
         <div class="actions">
+          <button id="start-btn" class="btn primary" type="button">Activar camera</button>
           <button id="restart-btn" class="btn primary" type="button">Reiniciar lector</button>
           <a class="btn secondary" href="enter.html">Anar a consumir</a>
           <a class="btn secondary" href="dashboard.html">Obrir dashboard</a>
@@ -391,6 +392,13 @@
       node.innerHTML = message;
     }
 
+    function updateCameraButtons() {
+      const startBtn = document.getElementById('start-btn');
+      if (!startBtn) return;
+      startBtn.disabled = state.started;
+      startBtn.textContent = state.started ? 'Camera activa' : 'Activar camera';
+    }
+
     function renderFields(ticket) {
       const grid = document.getElementById('result-grid');
       grid.innerHTML = `
@@ -439,6 +447,7 @@
       }
       state.scanner = null;
       state.started = false;
+      updateCameraButtons();
     }
 
     async function handleTicket(hash) {
@@ -492,9 +501,30 @@
     }
 
     async function startScanner() {
-      if (state.started) return;
+      if (state.started) {
+        updateCameraButtons();
+        return;
+      }
       state.started = true;
       state.processing = false;
+      updateCameraButtons();
+
+      if (!window.isSecureContext) {
+        state.started = false;
+        updateCameraButtons();
+        setStatus('No es pot demanar permis de camera fora d\'un context segur (HTTPS o localhost).', 'warn');
+        setBanner('error', 'Permis de camera bloquejat', 'Aquesta pagina s\'ha d\'obrir amb HTTPS (o localhost) per poder mostrar el popup de permisos.');
+        return;
+      }
+
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        state.started = false;
+        updateCameraButtons();
+        setStatus('Aquest navegador no te suport per accedir a la camera.', 'warn');
+        setBanner('error', 'Camera no suportada', 'Prova amb una versio actual de Chrome, Edge, Firefox o Safari.');
+        return;
+      }
+
       setStatus('Activant la camera i el lector de QR...', '');
 
       try {
@@ -514,13 +544,19 @@
         );
 
         setStatus('Camera activa. Situa el QR dins del marc.', 'ok');
+        updateCameraButtons();
       } catch (error) {
         state.started = false;
         state.scanner = null;
+        updateCameraButtons();
         setStatus('No s\'ha pogut activar la camera: ' + escapeHtml(error.message || String(error)), 'warn');
         setBanner('error', 'Camera no disponible', 'Revisa permisos, dispositiu o context segur (https o localhost).');
       }
     }
+
+    document.getElementById('start-btn').addEventListener('click', async () => {
+      await startScanner();
+    });
 
     document.getElementById('restart-btn').addEventListener('click', async () => {
       document.body.classList.remove('success');
@@ -537,7 +573,7 @@
       stopScanner();
     });
 
-    startScanner();
+    updateCameraButtons();
   </script>
 </body>
 </html>

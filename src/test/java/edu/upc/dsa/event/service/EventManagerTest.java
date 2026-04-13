@@ -46,6 +46,13 @@ public class EventManagerTest {
     }
 
     @Test
+    public void verifyShouldReturnAlreadyConsumedTicket() throws Exception {
+        Ticket ticket = eventManager.verify("USED_HASH");
+        assertTrue(ticket.isConsumed());
+        assertEquals("Ada", ticket.getNombre());
+    }
+
+    @Test
     public void enterShouldConsumeTicket() throws Exception {
         Ticket consumed = eventManager.enter("HnmdIOCoTKusuKcCSyQCugr9v30fcQ5J");
         assertTrue(consumed.isConsumed());

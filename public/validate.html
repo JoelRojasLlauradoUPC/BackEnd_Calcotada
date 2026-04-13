@@ -145,6 +145,44 @@
       background: rgba(2, 6, 23, 0.22);
     }
 
+    .scanner-frame {
+      position: absolute;
+      inset: 18px;
+      display: grid;
+      place-items: center;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .scanner-frame::before {
+      content: '';
+      width: min(72vw, 260px);
+      aspect-ratio: 1 / 1;
+      border-radius: 24px;
+      border: 3px solid rgba(125, 211, 252, 0.95);
+      box-shadow:
+        0 0 0 9999px rgba(2, 6, 23, 0.16),
+        0 0 28px rgba(125, 211, 252, 0.22);
+      background: linear-gradient(135deg, rgba(125, 211, 252, 0.08), rgba(196, 181, 253, 0.04));
+      position: relative;
+    }
+
+    .scanner-frame::after {
+      content: 'Alinea el QR dins del marc';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%) translateY(100%);
+      margin-top: 12px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.72);
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      color: var(--soft);
+      font-size: .82rem;
+      white-space: nowrap;
+    }
+
     #reader {
       width: 100%;
       min-height: 360px;
@@ -326,6 +364,7 @@
 
         <div class="scanner-box">
           <div id="reader"></div>
+          <div class="scanner-frame" aria-hidden="true"></div>
           <div id="scan-status" class="status">Prem "Activar camera" per iniciar el lector de QR.</div>
         </div>
       </section>
@@ -354,7 +393,6 @@
 
   <script>
     const API_BASE = '/api/event';
-    const SCAN_DELAY_MS = 1000;
     const state = {
       scanner: null,
       processing: false,
@@ -459,27 +497,23 @@
       }
 
       state.lastCode = normalizedHash;
-      setStatus('QR detectat. Espera 1 segon abans de validar...', '');
-      await new Promise(resolve => setTimeout(resolve, SCAN_DELAY_MS));
-
-      setStatus('Consultant el servidor...', '');
+      setStatus('QR detectat. Consultant el servidor...', '');
 
       const { response, data } = await fetchJson(API_BASE + '/verify/' + encodeURIComponent(normalizedHash));
 
       if (response.ok && data) {
+        document.body.classList.remove('success');
+        document.body.classList.remove('used');
         if (data.consumed) {
-          document.body.classList.remove('success');
           document.body.classList.add('used');
           setBanner('error', 'Entrada ja utilitzada', 'La entrada ja havia estat consumida abans de la consulta.');
-          document.getElementById('result-grid').innerHTML = '';
-          setStatus('Entrada ja utilitzada.', 'warn');
+          setStatus('Entrada ja utilitzada, però les dades s\'han carregat igualment.', 'warn');
         } else {
-          document.body.classList.remove('used');
           document.body.classList.add('success');
           setBanner('success', 'Entrada valida', 'La entrada encara no estava consumida.');
-          renderFields(data);
           setStatus('Entrada valida i disponible.', 'ok');
         }
+        renderFields(data);
       } else if (response.status === 404) {
         document.body.classList.remove('success');
         document.body.classList.remove('used');
@@ -545,6 +579,7 @@
           async (decodedText) => {
             if (state.processing) return;
             state.processing = true;
+            await stopScanner();
             setStatus('QR capturat. Preparant validacio...', '');
             await handleTicket(decodedText);
           },

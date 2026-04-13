@@ -428,6 +428,7 @@
 
   <script>
     const API_BASE = '/api/event';
+    const SCAN_DELAY_MS = 1000;
     const state = {
       scanner: null,
       processing: false,
@@ -543,6 +544,8 @@
       }
 
       state.lastCode = normalizedHash;
+      setStatus('QR detectat. Espera 1 segon abans de validar...', '');
+      await new Promise(resolve => setTimeout(resolve, SCAN_DELAY_MS));
       setStatus('QR detectat. Consultant el servidor...', '');
 
       const { response, data } = await fetchJson(API_BASE + '/enter/' + encodeURIComponent(normalizedHash));
@@ -659,6 +662,10 @@
       document.getElementById('result-grid').innerHTML = '';
       setStatus('Reiniciant lector...', '');
       await stopScanner();
+      await startScanner();
+    });
+
+    window.addEventListener('load', async () => {
       await startScanner();
     });
 

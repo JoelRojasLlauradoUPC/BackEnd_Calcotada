@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DE3TAC - Calçotada - Validar entrada</title>
+  <script src="https://unpkg.com/html5-qrcode@2.3.10/minified/html5-qrcode.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    :root {
+      --bg: #08111f;
+      --panel: rgba(11, 20, 34, 0.82);
+      --border: rgba(148, 163, 184, 0.18);
+      --text: #eef2ff;
+      --soft: #cbd5e1;
+      --shadow: 0 28px 70px rgba(2, 6, 23, 0.42);
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top right, rgba(59, 130, 246, 0.22), transparent 30%),
+        radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.18), transparent 26%),
+        linear-gradient(160deg, #040916 0%, #08111f 48%, #050814 100%);
+    }
+
+    body.success {
+      background:
+        radial-gradient(circle at top right, rgba(34, 197, 94, 0.26), transparent 28%),
+        linear-gradient(160deg, #052514 0%, #071b10 42%, #03110a 100%);
+    }
+
+    body.used {
+      background:
+        radial-gradient(circle at top right, rgba(239, 68, 68, 0.26), transparent 28%),
+        linear-gradient(160deg, #2a0505 0%, #1c0505 42%, #0d0202 100%);
+    }
+
+    .wrap {
+      min-height: 100vh;
+      padding: 22px;
+      display: grid;
+      place-items: center;
+    }
+
+    .shell {
+      width: min(1200px, 100%);
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(360px, .9fr);
+      gap: 22px;
+      align-items: start;
+    }
+
+    .hero, .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+    }
+
+    .hero {
+      padding: 30px;
+      position: relative;
+      overflow: hidden;
+      min-height: 100%;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(96, 165, 250, 0.12), transparent 34%, rgba(168, 85, 247, 0.08));
+      pointer-events: none;
+    }
+
+    .topline {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      position: relative;
+      z-index: 1;
+    }
+
+    .eyebrow {
+      font-size: .76rem;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: #8bd5ff;
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 4vw, 3.4rem);
+      line-height: 1.02;
+    }
+
+    .lead {
+      margin: 16px 0 0;
+      max-width: 60ch;
+      color: var(--soft);
+      line-height: 1.65;
+      position: relative;
+      z-index: 1;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 20px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .chip, .ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      padding: 10px 14px;
+      font-size: .92rem;
+      color: var(--soft);
+      background: rgba(15, 23, 42, 0.42);
+      text-decoration: none;
+    }
+
+    .ghost:hover { border-color: rgba(125, 211, 252, 0.42); }
+
+    .scanner-box {
+      position: relative;
+      z-index: 1;
+      margin-top: 24px;
+      border-radius: 24px;
+      padding: 18px;
+      border: 1px solid rgba(148, 163, 184, 0.14);
+      background: rgba(2, 6, 23, 0.22);
+    }
+
+    #reader {
+      width: 100%;
+      min-height: 360px;
+      border-radius: 20px;
+      overflow: hidden;
+      background: #020617;
+    }
+
+    .status {
+      margin-top: 16px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      border: 1px solid rgba(148, 163, 184, 0.14);
+      background: rgba(15, 23, 42, 0.56);
+      color: var(--soft);
+      line-height: 1.5;
+      min-height: 52px;
+    }
+
+    .status.ok {
+      border-color: rgba(34, 197, 94, 0.34);
+      background: rgba(6, 95, 70, 0.35);
+    }
+
+    .status.warn {
+      border-color: rgba(239, 68, 68, 0.34);
+      background: rgba(127, 29, 29, 0.5);
+    }
+
+    .card {
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-height: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .result-banner {
+      border-radius: 24px;
+      padding: 24px;
+      text-align: center;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(15, 23, 42, 0.34);
+      min-height: 180px;
+      display: grid;
+      place-items: center;
+    }
+
+    .result-banner.success {
+      background: linear-gradient(180deg, rgba(34, 197, 94, 0.22), rgba(5, 150, 105, 0.24));
+      border-color: rgba(34, 197, 94, 0.34);
+    }
+
+    .result-banner.error {
+      background: linear-gradient(180deg, rgba(239, 68, 68, 0.22), rgba(153, 27, 27, 0.28));
+      border-color: rgba(248, 113, 113, 0.42);
+    }
+
+    .result-banner .big {
+      font-size: clamp(2rem, 5vw, 4rem);
+      line-height: 1;
+      font-weight: 900;
+      letter-spacing: .02em;
+      margin: 0;
+    }
+
+    .result-banner .small {
+      margin: 10px 0 0;
+      color: rgba(255,255,255,.82);
+      line-height: 1.6;
+    }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .field {
+      padding: 14px;
+      border-radius: 18px;
+      background: rgba(15, 23, 42, 0.4);
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      min-width: 0;
+    }
+
+    .k {
+      font-size: .72rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: #93c5fd;
+      margin-bottom: 6px;
+    }
+
+    .v {
+      font-size: .98rem;
+      color: #f8fafc;
+      overflow-wrap: anywhere;
+      line-height: 1.45;
+    }
+
+    .full { grid-column: 1 / -1; }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: auto;
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 16px;
+      padding: 14px 18px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform .18s ease, opacity .18s ease, background .18s ease;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 48px;
+    }
+
+    .btn:hover { transform: translateY(-2px); }
+
+    .btn.primary {
+      color: #06131f;
+      background: linear-gradient(90deg, #7dd3fc, #c4b5fd);
+    }
+
+    .btn.secondary {
+      color: var(--text);
+      background: rgba(15, 23, 42, 0.48);
+      border: 1px solid var(--border);
+    }
+
+    .muted-note {
+      color: #cbd5e1;
+      font-size: .92rem;
+      line-height: 1.55;
+    }
+
+    @media (max-width: 980px) {
+      .shell { grid-template-columns: 1fr; }
+      .hero, .card { border-radius: 24px; }
+      #reader { min-height: 300px; }
+    }
+
+    @media (max-width: 640px) {
+      .wrap { padding: 14px; }
+      .hero, .card { padding: 18px; }
+      .result-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <div class="shell">
+      <section class="hero">
+        <div class="topline">
+          <div>
+            <div class="eyebrow">Verify entry</div>
+            <h1>Validar entrada</h1>
+          </div>
+          <a class="chip ghost" href="scan.html">Tornar al hub</a>
+        </div>
+
+        <p class="lead">Activa la camera, llegeix el QR i consulta l'estat de la entrada sense consumir-la. Si ja estava usada, la vista passa a vermell.</p>
+
+        <div class="chips">
+          <span class="chip">Camera activa</span>
+          <span class="chip">No consumeix</span>
+          <span class="chip">Endpoint: /api/event/verify/{hash}</span>
+        </div>
+
+        <div class="scanner-box">
+          <div id="reader"></div>
+          <div id="scan-status" class="status">Preparant lector de QR...</div>
+        </div>
+      </section>
+
+      <aside class="card">
+        <div id="result-banner" class="result-banner">
+          <div>
+            <div class="big">Esperant QR</div>
+            <p class="small">Mostra la entrada davant la camera per consultar-ne l'estat.</p>
+          </div>
+        </div>
+
+        <div id="result-grid" class="result-grid"></div>
+
+        <div class="actions">
+          <button id="restart-btn" class="btn primary" type="button">Reiniciar lector</button>
+          <a class="btn secondary" href="enter.html">Anar a consumir</a>
+          <a class="btn secondary" href="dashboard.html">Obrir dashboard</a>
+        </div>
+
+        <div class="muted-note">Quan la entrada ja estava consumida, la pantalla es posa en vermell amb el missatge <strong>entrada ja utilitzada</strong>. Si no ho esta, es mostra en verd amb totes les dades.</div>
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    const API_BASE = '/api/event';
+    const SCAN_DELAY_MS = 1000;
+    const state = {
+      scanner: null,
+      processing: false,
+      started: false,
+      lastCode: ''
+    };
+
+    function escapeHtml(value) {
+      return String(value == null ? '' : value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function getValue(ticket, key, fallback = '—') {
+      const value = ticket && Object.prototype.hasOwnProperty.call(ticket, key) ? ticket[key] : undefined;
+      if (value === null || value === undefined || value === '') {
+        return fallback;
+      }
+      return value;
+    }
+
+    function formatDateTime(value) {
+      if (!value) return '—';
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return String(value);
+      return date.toLocaleString('ca-ES');
+    }
+
+    function setStatus(message, tone) {
+      const node = document.getElementById('scan-status');
+      node.className = tone ? 'status ' + tone : 'status';
+      node.innerHTML = message;
+    }
+
+    function renderFields(ticket) {
+      const grid = document.getElementById('result-grid');
+      grid.innerHTML = `
+        <div class="field"><div class="k">Nom</div><div class="v">${escapeHtml(getValue(ticket, 'nombre'))}</div></div>
+        <div class="field"><div class="k">Cognom</div><div class="v">${escapeHtml(getValue(ticket, 'apellido'))}</div></div>
+        <div class="field full"><div class="k">Correu electronic</div><div class="v">${escapeHtml(getValue(ticket, 'correo_electronico'))}</div></div>
+        <div class="field"><div class="k">Entrepa</div><div class="v">${escapeHtml(getValue(ticket, 'entrepa'))}</div></div>
+        <div class="field"><div class="k">Numero local</div><div class="v">${escapeHtml(getValue(ticket, 'numero_local'))}</div></div>
+        <div class="field"><div class="k">Estat</div><div class="v">${ticket.consumed ? 'Consumida' : 'Pendent'}</div></div>
+        <div class="field"><div class="k">Consumida el</div><div class="v">${escapeHtml(formatDateTime(ticket.consumed_at))}</div></div>
+        <div class="field full"><div class="k">Hash</div><div class="v">${escapeHtml(getValue(ticket, 'hash'))}</div></div>
+      `;
+    }
+
+    function setBanner(mode, title, subtitle) {
+      const banner = document.getElementById('result-banner');
+      banner.className = 'result-banner ' + mode;
+      banner.innerHTML = `
+        <div>
+          <div class="big">${escapeHtml(title)}</div>
+          <p class="small">${escapeHtml(subtitle)}</p>
+        </div>
+      `;
+    }
+
+    async function fetchJson(url) {
+      const response = await fetch(url, { headers: { Accept: 'application/json' } });
+      let data = null;
+      try {
+        data = await response.json();
+      } catch (error) {
+        data = null;
+      }
+      return { response, data };
+    }
+
+    async function stopScanner() {
+      if (!state.scanner) return;
+      try {
+        await state.scanner.stop();
+      } catch (error) {
+      }
+      try {
+        await state.scanner.clear();
+      } catch (error) {
+      }
+      state.scanner = null;
+      state.started = false;
+    }
+
+    async function handleTicket(hash) {
+      const normalizedHash = String(hash || '').trim();
+      if (!normalizedHash) {
+        setStatus('QR buit. Torna a mostrar la entrada.', 'warn');
+        state.processing = false;
+        return;
+      }
+
+      state.lastCode = normalizedHash;
+      setStatus('QR detectat. Espera 1 segon abans de validar...', '');
+      await new Promise(resolve => setTimeout(resolve, SCAN_DELAY_MS));
+
+      setStatus('Consultant el servidor...', '');
+
+      const { response, data } = await fetchJson(API_BASE + '/verify/' + encodeURIComponent(normalizedHash));
+
+      if (response.ok && data) {
+        if (data.consumed) {
+          document.body.classList.remove('success');
+          document.body.classList.add('used');
+          setBanner('error', 'Entrada ja utilitzada', 'La entrada ja havia estat consumida abans de la consulta.');
+          document.getElementById('result-grid').innerHTML = '';
+          setStatus('Entrada ja utilitzada.', 'warn');
+        } else {
+          document.body.classList.remove('used');
+          document.body.classList.add('success');
+          setBanner('success', 'Entrada valida', 'La entrada encara no estava consumida.');
+          renderFields(data);
+          setStatus('Entrada valida i disponible.', 'ok');
+        }
+      } else if (response.status === 404) {
+        document.body.classList.remove('success');
+        document.body.classList.remove('used');
+        setBanner('error', 'Entrada no trobada', 'No hi ha cap registre amb aquest QR.');
+        document.getElementById('result-grid').innerHTML = '';
+        setStatus('No s\'ha trobat cap entrada per aquest QR.', 'warn');
+      } else {
+        const message = data && (data.message || data.error || data.detail)
+          ? (data.message || data.error || data.detail)
+          : 'Error inesperat del servidor.';
+        document.body.classList.remove('success');
+        document.body.classList.remove('used');
+        setBanner('error', 'Error del servidor', message);
+        document.getElementById('result-grid').innerHTML = '';
+        setStatus(message, 'warn');
+      }
+
+      state.processing = false;
+    }
+
+    async function startScanner() {
+      if (state.started) return;
+      state.started = true;
+      state.processing = false;
+      setStatus('Activant la camera i el lector de QR...', '');
+
+      try {
+        const scanner = new Html5Qrcode('reader');
+        state.scanner = scanner;
+
+        await scanner.start(
+          { facingMode: 'environment' },
+          { fps: 10, qrbox: { width: 260, height: 260 } },
+          async (decodedText) => {
+            if (state.processing) return;
+            state.processing = true;
+            setStatus('QR capturat. Preparant validacio...', '');
+            await handleTicket(decodedText);
+          },
+          () => {}
+        );
+
+        setStatus('Camera activa. Situa el QR dins del marc.', 'ok');
+      } catch (error) {
+        state.started = false;
+        state.scanner = null;
+        setStatus('No s\'ha pogut activar la camera: ' + escapeHtml(error.message || String(error)), 'warn');
+        setBanner('error', 'Camera no disponible', 'Revisa permisos, dispositiu o context segur (https o localhost).');
+      }
+    }
+
+    document.getElementById('restart-btn').addEventListener('click', async () => {
+      document.body.classList.remove('success');
+      document.body.classList.remove('used');
+      document.getElementById('result-banner').className = 'result-banner';
+      document.getElementById('result-banner').innerHTML = '<div><div class="big">Esperant QR</div><p class="small">Mostra la entrada davant la camera per consultar-ne l\'estat.</p></div>';
+      document.getElementById('result-grid').innerHTML = '';
+      setStatus('Reiniciant lector...', '');
+      await stopScanner();
+      await startScanner();
+    });
+
+    window.addEventListener('beforeunload', () => {
+      stopScanner();
+    });
+
+    startScanner();
+  </script>
+</body>
+</html>

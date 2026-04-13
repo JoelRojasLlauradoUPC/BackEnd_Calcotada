@@ -45,6 +45,15 @@
         linear-gradient(160deg, #2a0505 0%, #1c0505 42%, #0d0202 100%);
     }
 
+    body.scan-complete .shell {
+      grid-template-columns: minmax(0, 1fr);
+      width: min(760px, 100%);
+    }
+
+    body.scan-complete .hero {
+      display: none;
+    }
+
     .wrap {
       min-height: 100vh;
       padding: 22px;
@@ -242,6 +251,16 @@
       place-items: center;
     }
 
+    .result-banner.with-action {
+      gap: 14px;
+    }
+
+    .result-banner-actions {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 4px;
+    }
+
     .result-banner.success {
       background: linear-gradient(180deg, rgba(34, 197, 94, 0.22), rgba(5, 150, 105, 0.24));
       border-color: rgba(34, 197, 94, 0.34);
@@ -330,6 +349,13 @@
       color: var(--text);
       background: rgba(15, 23, 42, 0.48);
       border: 1px solid var(--border);
+    }
+
+    .btn.next {
+      color: #06131f;
+      background: linear-gradient(90deg, #f8fafc, #bfdbfe);
+      min-width: 132px;
+      letter-spacing: .08em;
     }
 
     .muted-note {
@@ -446,6 +472,10 @@
       startBtn.textContent = state.started ? 'Camera activa' : 'Activar camera';
     }
 
+    function setCompletedView(completed) {
+      document.body.classList.toggle('scan-complete', completed);
+    }
+
     function renderFields(ticket) {
       const grid = document.getElementById('result-grid');
       grid.innerHTML = `
@@ -460,15 +490,22 @@
       `;
     }
 
-    function setBanner(mode, title, subtitle) {
+    function setBanner(mode, title, subtitle, showNext = false) {
       const banner = document.getElementById('result-banner');
-      banner.className = 'result-banner ' + mode;
+      banner.className = 'result-banner ' + mode + (showNext ? ' with-action' : '');
       banner.innerHTML = `
         <div>
+          ${showNext ? '<div class="result-banner-actions"><button id="next-btn" class="btn next" type="button">NEXT</button></div>' : ''}
           <div class="big">${escapeHtml(title)}</div>
           <p class="small">${escapeHtml(subtitle)}</p>
         </div>
       `;
+      if (showNext) {
+        const nextButton = document.getElementById('next-btn');
+        if (nextButton) {
+          nextButton.addEventListener('click', () => window.location.reload());
+        }
+      }
     }
 
     async function fetchJson(url) {
@@ -511,30 +548,34 @@
       const { response, data } = await fetchJson(API_BASE + '/enter/' + encodeURIComponent(normalizedHash));
 
       if (response.ok && data) {
+        setCompletedView(true);
         document.body.classList.remove('used');
         document.body.classList.add('success');
-        setBanner('success', 'Entrada validada', 'La entrada s\'ha consumit correctament.');
+        setBanner('success', 'Entrada validada', 'La entrada s\'ha consumit correctament.', true);
         renderFields(data);
         setStatus('Entrada consumida amb exit.', 'ok');
       } else if (response.status === 409) {
+        setCompletedView(true);
         document.body.classList.remove('success');
         document.body.classList.add('used');
-        setBanner('error', 'Entrada ja utilitzada', 'Aquesta entrada ja estava consumida abans de fer la peticio.');
+        setBanner('error', 'Entrada ja utilitzada', 'Aquesta entrada ja estava consumida abans de fer la peticio.', true);
         document.getElementById('result-grid').innerHTML = '';
         setStatus('Entrada ja utilitzada.', 'warn');
       } else if (response.status === 404) {
+        setCompletedView(true);
         document.body.classList.remove('success');
         document.body.classList.remove('used');
-        setBanner('error', 'Entrada no trobada', 'No hi ha cap registre amb aquest QR.');
+        setBanner('error', 'Entrada no trobada', 'No hi ha cap registre amb aquest QR.', true);
         document.getElementById('result-grid').innerHTML = '';
         setStatus('No s\'ha trobat cap entrada per aquest QR.', 'warn');
       } else {
+        setCompletedView(true);
         const message = data && (data.message || data.error || data.detail)
           ? (data.message || data.error || data.detail)
           : 'Error inesperat del servidor.';
         document.body.classList.remove('success');
         document.body.classList.remove('used');
-        setBanner('error', 'Error del servidor', message);
+        setBanner('error', 'Error del servidor', message, true);
         document.getElementById('result-grid').innerHTML = '';
         setStatus(message, 'warn');
       }
@@ -610,6 +651,7 @@
     });
 
     document.getElementById('restart-btn').addEventListener('click', async () => {
+      setCompletedView(false);
       document.body.classList.remove('success');
       document.body.classList.remove('used');
       document.getElementById('result-banner').className = 'result-banner';
@@ -624,6 +666,7 @@
       stopScanner();
     });
 
+    setCompletedView(false);
     updateCameraButtons();
   </script>
 </body>
